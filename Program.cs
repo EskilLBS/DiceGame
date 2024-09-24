@@ -96,10 +96,10 @@ namespace DiceGame
                         {
                             dealerStand = true;
                         }
-
-                        //Draw card if dealer hasn't stood
+                    
                         if (!dealerStand)
                         {
+                            //Draw card if dealer hasn't stood
                             DealerDraw();
                             ShowDealerHand();
                         }
