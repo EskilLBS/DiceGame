@@ -84,51 +84,9 @@ namespace DiceGame
                     PlayerDraw();
                     ShowPlayerHand();
 
-                    //End game if player is above 21
-                    if (playerHandValue > 21)
-                    {
-                        if (playerHand.Contains(CardType.Ace))
-                        {
-                            //Check if any player aces can become 1 instead of 11 to lower the player score
-                            CalculatePlayerAces();
-
-                            if (playerHandValue > 21)
-                            {
-                                //End the game if the player goes above 21
-                                Console.WriteLine("You went over 21");
-                                gameEnded = true;
-                            }
-                        }
-                        else
-                        {
-                            //End the game if the player goes above 21
-                            Console.WriteLine("You went over 21");
-                            gameEnded = true;
-                        }
-                    }
-
-                    //End game if dealer is above 21
-                    if (dealerHandValue > 21)
-                    {
-                        if (dealerHand.Contains(CardType.Ace))
-                        {
-                            //Check if any dealer aces can become 1 instead of 11 to lower dealer score
-                            CalculateDealerAces();
-
-                            if (dealerHandValue > 21)
-                            {
-                                //End the game if the dealer goes over 21
-                                Console.WriteLine("The dealer went over 21");
-                                gameEnded = true;
-                            }
-                        }
-                        else
-                        {
-                            //End the game if the dealer goes over 21
-                            Console.WriteLine("The dealer went over 21");
-                            gameEnded = true;
-                        }
-                    }
+                    //Check if either player or dealer has gone above 21
+                    PlayerBustCheck();
+                    DealerBustCheck();
 
                     //Draw dealer card
                     if (playerHandValue < 22)
@@ -152,28 +110,8 @@ namespace DiceGame
                         }
                     }
 
-                    //End game if dealer is above 21
-                    if (dealerHandValue > 21)
-                    {
-                        if (dealerHand.Contains(CardType.Ace))
-                        {
-                            //Check if any aces can become 1 instead of 11 to lower dealer score
-                            CalculateDealerAces();
-
-                            if (dealerHandValue > 21)
-                            {
-                                //End the game if the dealer goes over 21
-                                Console.WriteLine("The dealer went over 21");
-                                gameEnded = true;
-                            }
-                        }
-                        else
-                        {
-                            //End the game if the dealer goes over 21
-                            Console.WriteLine("The dealer went over 21");
-                            gameEnded = true;
-                        }
-                    }
+                    //Check if dealer goes above 21
+                    DealerBustCheck();
 
                     #endregion
 
@@ -421,7 +359,7 @@ namespace DiceGame
             #endregion
         }
 
-        //Player methods
+        //Draw a card for the player
         static void PlayerDraw()
         {
             currentCard = deck[0];
@@ -489,6 +427,8 @@ namespace DiceGame
                 }
             }
         }
+
+        //Show the player's hand
         static void ShowPlayerHand()
         {
             Console.WriteLine("\nYour hand consists of: ");
@@ -503,6 +443,8 @@ namespace DiceGame
             Console.WriteLine("");
             Console.ResetColor();
         }
+
+        //Calculate what the value should be of the player's aces
         static void CalculatePlayerAces()
         {
             //Calculate value of player aces
@@ -525,7 +467,35 @@ namespace DiceGame
             }
         }
 
-        //Dealer methods
+        //Check if the player has gone above 21
+        static void PlayerBustCheck()
+        {
+            //End game if player is above 21
+            if (playerHandValue > 21)
+            {
+                if (playerHand.Contains(CardType.Ace))
+                {
+                    //Check if any player aces can become 1 instead of 11 to lower the player score
+                    CalculatePlayerAces();
+
+                    if (playerHandValue > 21)
+                    {
+                        //End the game if the player goes above 21
+                        Console.WriteLine("You went over 21");
+                        gameEnded = true;
+                    }
+                }
+                else
+                {
+                    //End the game if the player goes above 21
+                    Console.WriteLine("You went over 21");
+                    gameEnded = true;
+                }
+            }
+        }
+
+
+        //Draw a card for the dealer
         static void DealerDraw()
         {
             currentCard = deck[0];
@@ -594,6 +564,8 @@ namespace DiceGame
                 }
             }
         }
+
+        //Show the dealer's hand
         static void ShowDealerHand()
         {
             Console.WriteLine("\nThe dealer's hand consists of: ");
@@ -608,6 +580,8 @@ namespace DiceGame
             Console.WriteLine("");
             Console.ResetColor();
         }
+
+        //Calculate what the value should be of the dealer's aces
         static void CalculateDealerAces()
         {
             //Calculate value of dealer aces
@@ -626,6 +600,32 @@ namespace DiceGame
             {
                 Console.WriteLine("The dealer has gone over 21");
                 gameEnded = true;
+            }
+        }
+
+        //Check if the dealer has gone above 21
+        static void DealerBustCheck()
+        {          
+            if (dealerHandValue > 21)
+            {
+                if (dealerHand.Contains(CardType.Ace))
+                {
+                    //Check if any dealer aces can become 1 instead of 11 to lower dealer score
+                    CalculateDealerAces();
+
+                    if (dealerHandValue > 21)
+                    {
+                        //End the game if the dealer goes over 21
+                        Console.WriteLine("The dealer went over 21");
+                        gameEnded = true;
+                    }
+                }
+                else
+                {
+                    //End the game if the dealer goes over 21
+                    Console.WriteLine("The dealer went over 21");
+                    gameEnded = true;
+                }
             }
         }
 
