@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace DiceGame
+﻿namespace DiceGame
 {
     internal class Program
     {
