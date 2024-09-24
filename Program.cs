@@ -8,13 +8,10 @@ namespace DiceGame
 
         //Random number variable
         static readonly Random rand = new();
-        static int card = 0;
 
         //Card variables
         static List<int> deck = Enumerable.Range(1, 16)
             .SelectMany(s => Enumerable.Range(1, 13)).ToList();
-
-        //Card types
         enum CardType
         {
             Ace,
@@ -31,6 +28,7 @@ namespace DiceGame
             Queen,
             King
         }
+        static int currentCard = 0;
 
         //Money variables
         static int playerMoney = 1000;
@@ -39,8 +37,8 @@ namespace DiceGame
         static bool fraud = false;
 
         //Score variables
-        static int playerScore = 0;
-        static int dealerScore = 0;
+        static int playerHandValue = 0;
+        static int dealerHandValue = 0;
         static bool dealerStand = false;
 
         //Player input
@@ -56,25 +54,25 @@ namespace DiceGame
         //Game ended and restart variables
         static bool gameEnded = false;
         static bool blackjack = false;
-        static bool restart = false;
+        static bool playerRestart = false;
 
         #endregion
 
         static void Main()
         {
-            StartGame();       
+            StartGame();
 
             //Forever true while loop
             while (true)
             {
                 //If player has restarted
-                if (restart)
+                if (playerRestart)
                 {
                     //Ask the player to bet and draw the first two cards for the player and dealer
                     StartGame();
 
                     //Set restart to false as the game has started
-                    restart = false;
+                    playerRestart = false;
                 }
 
                 //If player wants to hit
@@ -87,13 +85,13 @@ namespace DiceGame
                     ShowPlayerHand();
 
                     //End game if player is above 21
-                    if (playerScore > 21)
+                    if (playerHandValue > 21)
                     {
                         if (playerHand.Contains(CardType.Ace))
                         {
                             CalculatePlayerAces();
 
-                            if(playerScore > 21)
+                            if (playerHandValue > 21)
                             {
                                 Console.WriteLine("You went over 21");
                                 gameEnded = true;
@@ -108,13 +106,13 @@ namespace DiceGame
                     }
 
                     //End game if dealer is above 21
-                    if (dealerScore > 21)
+                    if (dealerHandValue > 21)
                     {
                         if (dealerHand.Contains(CardType.Ace))
                         {
                             CalculateDealerAces();
 
-                            if (dealerScore > 21)
+                            if (dealerHandValue > 21)
                             {
                                 Console.WriteLine("The dealer went over 21");
                                 gameEnded = true;
@@ -128,10 +126,10 @@ namespace DiceGame
                     }
 
                     //Draw dealer card
-                    if (playerScore < 22)
+                    if (playerHandValue < 22)
                     {
                         //Stand if dealer is above 17
-                        if (dealerScore >= 17)
+                        if (dealerHandValue >= 17)
                         {
                             dealerStand = true;
                         }
@@ -150,17 +148,17 @@ namespace DiceGame
                     }
 
                     //End game if dealer is above 21
-                    if (dealerScore > 21)
+                    if (dealerHandValue > 21)
                     {
                         if (dealerHand.Contains(CardType.Ace))
                         {
                             CalculateDealerAces();
 
-                            if(dealerScore > 21)
+                            if (dealerHandValue > 21)
                             {
                                 Console.WriteLine("The dealer went over 21");
                                 gameEnded = true;
-                            }                        
+                            }
                         }
                         else
                         {
@@ -172,7 +170,7 @@ namespace DiceGame
                     #endregion
 
                     //Stand if dealer is above 17
-                    if (dealerScore >= 17)
+                    if (dealerHandValue >= 17)
                     {
                         if (dealerHand[0] == CardType.Ace && dealerHand[1] == CardType.Ace && dealerHand.Count == 2)
                         {
@@ -197,7 +195,7 @@ namespace DiceGame
                 }
 
                 //Make dealer roll until they're above 17 if player stands when the dealer is below 17
-                while (playerInput.ToLower().Trim() == "stand" && dealerScore < 17)
+                while (playerInput.ToLower().Trim() == "stand" && dealerHandValue < 17)
                 {
                     //Draw dealer card and show the dealer's hand
                     DealerDraw();
@@ -218,8 +216,8 @@ namespace DiceGame
                 if (gameEnded)
                 {
                     //Write out the value of the player and dealer hand
-                    Console.WriteLine("The value of your hand is: " + playerScore);
-                    Console.WriteLine("The value of the dealer's hand is: " + dealerScore);
+                    Console.WriteLine("The value of your hand is: " + playerHandValue);
+                    Console.WriteLine("The value of the dealer's hand is: " + dealerHandValue);
 
                     //Break while loop if the player has no money left
                     if (playerMoney <= 0)
@@ -238,8 +236,8 @@ namespace DiceGame
 
                     //Calculate who wins if Blackjack didn't occur
                     if (!blackjack)
-                    {                     
-                        if (dealerScore >= playerScore && dealerScore <= 21)
+                    {
+                        if (dealerHandValue >= playerHandValue && dealerHandValue <= 21)
                         {
                             //Dealer has more score than player and is under 21. Dealer wins
                             Console.ForegroundColor = ConsoleColor.Red;
@@ -248,7 +246,7 @@ namespace DiceGame
                             Console.WriteLine("You lost " + betMoney + " dollars which means you have " + playerMoney + " dollars left!");
                             Console.ResetColor();
                         }
-                        else if (dealerScore == playerScore)
+                        else if (dealerHandValue == playerHandValue)
                         {
                             //Dealer and player score is equal. Dealer wins
                             Console.ForegroundColor = ConsoleColor.Red;
@@ -256,7 +254,7 @@ namespace DiceGame
                             Console.WriteLine("You lost " + betMoney + " dollars which means you have " + playerMoney + " dollars left!");
                             Console.ResetColor();
                         }
-                        else if (playerScore > 21 && dealerScore <= 21)
+                        else if (playerHandValue > 21 && dealerHandValue <= 21)
                         {
                             //Player goes over 21 and dealer doesn't. Dealer wins
                             Console.ForegroundColor = ConsoleColor.Red;
@@ -283,8 +281,8 @@ namespace DiceGame
                     if (playerInput == "y" || playerInput == "yes")
                     {
                         betMoney = 0;
-                        playerScore = 0;
-                        dealerScore = 0;
+                        playerHandValue = 0;
+                        dealerHandValue = 0;
 
                         playerHand.Clear();
                         playerAceValues.Clear();
@@ -294,7 +292,7 @@ namespace DiceGame
 
                         dealerStand = false;
                         gameEnded = false;
-                        restart = true;
+                        playerRestart = true;
                         blackjack = false;
 
                         Console.Clear();
@@ -369,7 +367,7 @@ namespace DiceGame
 
             #region Check for Blackjack
 
-            if (playerScore == 21 && dealerScore != 21)
+            if (playerHandValue == 21 && dealerHandValue != 21)
             {
                 //Player has Blackjack and dealer doesn't
 
@@ -384,7 +382,7 @@ namespace DiceGame
                 gameEnded = true;
                 blackjack = true;
             }
-            else if (dealerScore == 21 && playerScore != 21)
+            else if (dealerHandValue == 21 && playerHandValue != 21)
             {
                 //Dealer has Blackjack and player doesn't
 
@@ -398,7 +396,7 @@ namespace DiceGame
                 gameEnded = true;
                 blackjack = true;
             }
-            else if (playerScore == 21 && dealerScore == 21)
+            else if (playerHandValue == 21 && dealerHandValue == 21)
             {
                 //Both the dealer and the player have Blackjack
 
@@ -418,40 +416,40 @@ namespace DiceGame
         //Player methods
         static void PlayerDraw()
         {
-            card = deck[0];
+            currentCard = deck[0];
             deck.RemoveAt(0);
 
-            if (card == 1)
+            if (currentCard == 1)
             {
-                playerScore += 11;
+                playerHandValue += 11;
                 Console.WriteLine("You drew an ace!");
                 playerHand.Add(CardType.Ace);
                 playerAceValues.Add(11);
             }
-            else if (card == 11)
+            else if (currentCard == 11)
             {
-                playerScore += 10;
+                playerHandValue += 10;
                 Console.WriteLine("You drew a jack!");
                 playerHand.Add(CardType.Jack);
             }
-            else if (card == 12)
+            else if (currentCard == 12)
             {
-                playerScore += 10;
+                playerHandValue += 10;
                 Console.WriteLine("You drew a queen!");
                 playerHand.Add(CardType.Queen);
             }
-            else if (card == 13)
+            else if (currentCard == 13)
             {
-                playerScore += 10;
+                playerHandValue += 10;
                 Console.WriteLine("You drew a king!");
                 playerHand.Add(CardType.King);
             }
             else
             {
-                playerScore += card;
-                Console.WriteLine("You drew a " + card + "!");
+                playerHandValue += currentCard;
+                Console.WriteLine("You drew a " + currentCard + "!");
 
-                switch (card)
+                switch (currentCard)
                 {
                     case 2:
                         playerHand.Add(CardType.Two);
@@ -499,31 +497,21 @@ namespace DiceGame
         }
         static void CalculatePlayerAces()
         {
-            //Checking value of aces. Can improve method most likely
-            if (playerAceValues[0] == 11)
+            //Calculate value of player aces
+            for (int i = 0; i < playerAceValues.Count; i++)
             {
-                playerAceValues[0] = 1;
-                playerScore -= 10;
-            }
-            else if (playerAceValues.Count >= 2)
-            {
-                if (playerAceValues[1] == 11)
+                if (playerAceValues[i] == 11)
                 {
-                    playerAceValues[1] = 1;
-                    playerScore -= 10;
+                    playerAceValues[i] = 1;
+                    playerHandValue -= 10;
+                    break;
                 }
             }
-            else if (playerAceValues.Count >= 3)
+
+            //End the game if the player goes above 21. Not sure if this ever triggers, mostly here as a failsafe
+            if (playerHandValue > 21)
             {
-                if (playerAceValues[2] == 11)
-                {
-                    playerAceValues[2] = 1;
-                    playerScore -= 10;
-                }
-            }
-            else
-            {
-                //End the game if the player goes above 21
+
                 Console.WriteLine("You went over 21");
                 gameEnded = true;
             }
@@ -532,41 +520,41 @@ namespace DiceGame
         //Dealer methods
         static void DealerDraw()
         {
-            card = deck[0];
+            currentCard = deck[0];
             deck.RemoveAt(0);
 
-            if (card == 1)
+            if (currentCard == 1)
             {
-                dealerScore += 11;
+                dealerHandValue += 11;
                 Console.WriteLine("The dealer drew an ace!");
                 dealerHand.Add(CardType.Ace);
                 dealerAceValues.Add(11);
 
             }
-            else if (card == 11)
+            else if (currentCard == 11)
             {
-                dealerScore += 10;
+                dealerHandValue += 10;
                 Console.WriteLine("The dealer drew a jack!");
                 dealerHand.Add(CardType.Jack);
             }
-            else if (card == 12)
+            else if (currentCard == 12)
             {
-                dealerScore += 10;
+                dealerHandValue += 10;
                 Console.WriteLine("The dealer drew a queen!");
                 dealerHand.Add(CardType.Queen);
             }
-            else if (card == 13)
+            else if (currentCard == 13)
             {
-                dealerScore += 10;
+                dealerHandValue += 10;
                 Console.WriteLine("The dealer drew a king!");
                 dealerHand.Add(CardType.King);
             }
             else
             {
-                dealerScore += card;
-                Console.WriteLine("The dealer drew a " + card + ".");
+                dealerHandValue += currentCard;
+                Console.WriteLine("The dealer drew a " + currentCard + ".");
 
-                switch (card)
+                switch (currentCard)
                 {
                     case 2:
                         dealerHand.Add(CardType.Two);
@@ -614,29 +602,19 @@ namespace DiceGame
         }
         static void CalculateDealerAces()
         {
-            //Check for dealer ace values. Can improve method most likely
-            if (dealerAceValues[0] == 11)
+            //Calculate value of dealer aces
+            for (int i = 0; i < dealerAceValues.Count; i++)
             {
-                dealerAceValues[0] = 1;
-                dealerScore -= 10;
-            }
-            else if (dealerAceValues.Count >= 2)
-            {
-                if (dealerAceValues[1] == 11)
+                if (dealerAceValues[i] == 11)
                 {
-                    dealerAceValues[1] = 1;
-                    dealerScore -= 10;
+                    dealerAceValues[i] = 1;
+                    dealerHandValue -= 10;
+                    break;
                 }
             }
-            else if (dealerAceValues.Count >= 3)
-            {
-                if (dealerAceValues[2] == 11)
-                {
-                    dealerAceValues[2] = 1;
-                    dealerScore -= 10;
-                }
-            }
-            else
+
+            //End the game if the dealer goes above 21. Not sure if this ever triggers, mostly here as a failsafe
+            if (dealerHandValue > 21)
             {
                 Console.WriteLine("The dealer has gone over 21");
                 gameEnded = true;
