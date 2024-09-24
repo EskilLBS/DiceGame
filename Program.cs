@@ -176,8 +176,9 @@ namespace DiceGame
                     {
                         if (dealerHand[0] == CardType.Ace && dealerHand[1] == CardType.Ace && dealerHand.Count == 2)
                         {
-                            //Do nothing, this is only here to make sure one ace becomes a 1 if there are only two cards, both of which are aces
-                            Console.WriteLine("hej");
+                            //Do nothing, this is only here to make sure one ace becomes a 1 if there are only two cards,
+                            //both of which are aces
+
                         }
                         else
                         {
