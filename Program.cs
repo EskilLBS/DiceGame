@@ -1,0 +1,659 @@
+﻿using System.Diagnostics;
+
+namespace DiceGame
+{
+    internal class Program
+    {
+        #region Variables
+
+        //Random number variable
+        static readonly Random rand = new();
+        static int card = 0;
+
+        //Card variables
+        static List<int> deck = Enumerable.Range(1, 16)
+            .SelectMany(s => Enumerable.Range(1, 13)).ToList();
+
+        //Card types
+        enum CardType
+        {
+            Ace,
+            Two,
+            Three,
+            Four,
+            Five,
+            Six,
+            Seven,
+            Eight,
+            Nine,
+            Ten,
+            Jack,
+            Queen,
+            King
+        }
+
+        //Money variables
+        static int playerMoney = 1000;
+        static string betMoneyString;
+        static int betMoney = 0;
+        static bool fraud = false;
+
+        //Score variables
+        static int playerScore = 0;
+        static int dealerScore = 0;
+        static bool dealerStand = false;
+
+        //Player input
+        static string playerInput = "";
+
+        //Hand variables
+        static List<CardType> playerHand = new();
+        static List<int> playerAceValues = new();
+
+        static List<CardType> dealerHand = new();
+        static List<int> dealerAceValues = new();
+
+        //Game ended and restart variables
+        static bool gameEnded = false;
+        static bool blackjack = false;
+        static bool restart = false;
+
+        #endregion
+
+        static void Main()
+        {
+            StartGame();       
+
+            //Forever true while loop
+            while (true)
+            {
+                //If player has restarted
+                if (restart)
+                {
+                    //Ask the player to bet and draw the first two cards for the player and dealer
+                    StartGame();
+
+                    //Set restart to false as the game has started
+                    restart = false;
+                }
+
+                //If player wants to hit
+                if (playerInput.Trim().ToLower() == "hit")
+                {
+                    #region Draw player and dealer card. Check if player goes above 21 before dealer draws card
+
+                    //Draw player card
+                    PlayerDraw();
+                    ShowPlayerHand();
+
+                    //End game if player is above 21
+                    if (playerScore > 21)
+                    {
+                        if (playerHand.Contains(CardType.Ace))
+                        {
+                            CalculatePlayerAces();
+
+                            if(playerScore > 21)
+                            {
+                                Console.WriteLine("You went over 21");
+                                gameEnded = true;
+                            }
+                        }
+                        else
+                        {
+                            //End the game if the player goes above 21
+                            Console.WriteLine("You went over 21");
+                            gameEnded = true;
+                        }
+                    }
+
+                    //End game if dealer is above 21
+                    if (dealerScore > 21)
+                    {
+                        if (dealerHand.Contains(CardType.Ace))
+                        {
+                            CalculateDealerAces();
+
+                            if (dealerScore > 21)
+                            {
+                                Console.WriteLine("The dealer went over 21");
+                                gameEnded = true;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("The dealer went over 21");
+                            gameEnded = true;
+                        }
+                    }
+
+                    //Draw dealer card
+                    if (playerScore < 22)
+                    {
+                        //Stand if dealer is above 17
+                        if (dealerScore >= 17)
+                        {
+                            dealerStand = true;
+                        }
+
+                        //Draw card if dealer hasn't stood
+                        if (!dealerStand)
+                        {
+                            DealerDraw();
+                            ShowDealerHand();
+                        }
+                        else
+                        {
+                            //Tell player the dealer stands
+                            Console.WriteLine("The dealer stands because their hand's value is 17 or more");
+                        }
+                    }
+
+                    //End game if dealer is above 21
+                    if (dealerScore > 21)
+                    {
+                        if (dealerHand.Contains(CardType.Ace))
+                        {
+                            CalculateDealerAces();
+
+                            if(dealerScore > 21)
+                            {
+                                Console.WriteLine("The dealer went over 21");
+                                gameEnded = true;
+                            }                        
+                        }
+                        else
+                        {
+                            Console.WriteLine("The dealer went over 21");
+                            gameEnded = true;
+                        }
+                    }
+
+                    #endregion
+
+                    //Stand if dealer is above 17
+                    if (dealerScore >= 17)
+                    {
+                        if (dealerHand[0] == CardType.Ace && dealerHand[1] == CardType.Ace && dealerHand.Count == 2)
+                        {
+                            //Do nothing, this is only here to make sure one ace becomes a 1 if there are only two cards, both of which are aces
+                            Console.WriteLine("hej");
+                        }
+                        else
+                        {
+                            //Stands if the dealer doesn't have two cards, both of which are aces.
+                            //If that happens one of the aces should be a 1 instead of an 11
+                            dealerStand = true;
+                        }
+                    }
+                }
+
+                //If game hasn't ended, ask player to hit or stand
+                if (!gameEnded)
+                {
+                    Console.WriteLine("Do you want to hit or stand?\n");
+                    playerInput = Console.ReadLine();
+                }
+
+                //Make dealer roll until they're above 17 if player stands when the dealer is below 17
+                while (playerInput.ToLower().Trim() == "stand" && dealerScore < 17)
+                {
+                    //Draw dealer card and show the dealer's hand
+                    DealerDraw();
+                    ShowDealerHand();
+
+                    //End the game
+                    gameEnded = true;
+                }
+
+                //End game if player stands
+                if (playerInput.ToLower().Trim() == "stand")
+                {
+                    gameEnded = true;
+                }
+
+                #region Logic for ending the game
+
+                if (gameEnded)
+                {
+                    //Write out the value of the player and dealer hand
+                    Console.WriteLine("The value of your hand is: " + playerScore);
+                    Console.WriteLine("The value of the dealer's hand is: " + dealerScore);
+
+                    //Break while loop if the player has no money left
+                    if (playerMoney <= 0)
+                    {
+                        Console.WriteLine("You have been kicked out of the casino because you have no money left!");
+                        break;
+                    }
+
+                    //Check if player commited fraud
+                    if (fraud)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("\nYou have been arrested for betting more money than you have!");
+                        break;
+                    }
+
+                    //Calculate who wins if Blackjack didn't occur
+                    if (!blackjack)
+                    {                     
+                        if (dealerScore >= playerScore && dealerScore <= 21)
+                        {
+                            //Dealer has more score than player and is under 21. Dealer wins
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Dealer wins!");
+                            playerMoney -= betMoney;
+                            Console.WriteLine("You lost " + betMoney + " dollars which means you have " + playerMoney + " dollars left!");
+                            Console.ResetColor();
+                        }
+                        else if (dealerScore == playerScore)
+                        {
+                            //Dealer and player score is equal. Dealer wins
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            playerMoney -= betMoney;
+                            Console.WriteLine("You lost " + betMoney + " dollars which means you have " + playerMoney + " dollars left!");
+                            Console.ResetColor();
+                        }
+                        else if (playerScore > 21 && dealerScore <= 21)
+                        {
+                            //Player goes over 21 and dealer doesn't. Dealer wins
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Dealer wins!");
+                            playerMoney -= betMoney;
+                            Console.WriteLine("You lost " + betMoney + " dollars which means you have " + playerMoney + " dollars left!");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            //All scenarios where the dealer doesn't have a winning condition. Player wins
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine("You win!");
+                            playerMoney += betMoney;
+                            Console.WriteLine("You won " + betMoney + " dollars! You have " + playerMoney + " dollars now!");
+                            Console.ResetColor();
+                        }
+                    }
+                    Console.WriteLine("\nDo you want to play again? y/n");
+
+                    playerInput = Console.ReadLine();
+
+                    //Check if player wants to play again
+                    if (playerInput == "y" || playerInput == "yes")
+                    {
+                        betMoney = 0;
+                        playerScore = 0;
+                        dealerScore = 0;
+
+                        playerHand.Clear();
+                        playerAceValues.Clear();
+
+                        dealerHand.Clear();
+                        dealerAceValues.Clear();
+
+                        dealerStand = false;
+                        gameEnded = false;
+                        restart = true;
+                        blackjack = false;
+
+                        Console.Clear();
+                        Console.WriteLine("\x1b[3J");
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        break;
+                    }
+                }
+
+                #endregion
+            }
+        }
+
+        //Logic for starting the game, includes betting and drawing the first two cards for both participants
+        static void StartGame()
+        {
+            Console.WriteLine("Welcome to Black Jack!\n");
+
+            deck = Enumerable.Range(1, 16)
+                        .SelectMany(s => Enumerable.Range(1, 13)).ToList();
+            deck = GenerateRandomLoop(deck);
+
+            #region Bet logic
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("How much do you want to bet? You currently have " + playerMoney + " dollars.");
+
+            betMoneyString = Console.ReadLine();
+            bool betIsNumber = int.TryParse(betMoneyString, out betMoney);
+
+            if (!betIsNumber)
+            {
+                Console.WriteLine("That is not a number. Please write a how much you want to bet as a NUMBER");
+                betMoney = int.Parse(Console.ReadLine());
+            }
+
+            if (betMoney > playerMoney)
+            {
+                fraud = true;
+            }
+
+            if (betMoney < 0)
+            {
+                betMoney *= -1;
+            }
+
+            Console.WriteLine("You have bet " + betMoney + " dollars!\n");
+            Console.ResetColor();
+
+            #endregion
+
+            #region Draw first two cards
+
+            //Draw player card
+            for (int i = 0; i < 2; i++)
+            {
+                PlayerDraw();
+            }
+            ShowPlayerHand();
+
+            //Draw dealer cards
+            for (int i = 0; i < 2; i++)
+            {
+                DealerDraw();
+            }
+            ShowDealerHand();
+
+            #endregion
+
+            #region Check for Blackjack
+
+            if (playerScore == 21 && dealerScore != 21)
+            {
+                //Player has Blackjack and dealer doesn't
+
+                playerMoney += (int)(betMoney * 1.5f);
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("You got Blackjack!\n" +
+                    "You won " + (betMoney * 1.5f) + " dollars which means you now have " + playerMoney + " dollars!");
+                Console.ResetColor();
+
+
+                gameEnded = true;
+                blackjack = true;
+            }
+            else if (dealerScore == 21 && playerScore != 21)
+            {
+                //Dealer has Blackjack and player doesn't
+
+                playerMoney -= betMoney;
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("The dealer got Blackjack!\n" +
+                    "You lost " + betMoney + " dollars which means you have " + playerMoney + " dollars left!");
+                Console.ResetColor();
+
+                gameEnded = true;
+                blackjack = true;
+            }
+            else if (playerScore == 21 && dealerScore == 21)
+            {
+                //Both the dealer and the player have Blackjack
+
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine("Both you and the dealer got Blackjack!\n" +
+                    "You got your bet of " + betMoney + " dollars back which means you still have " + playerMoney + " dollars left!");
+
+                Console.ResetColor();
+
+                gameEnded = true;
+                blackjack = true;
+            }
+
+            #endregion
+        }
+
+        //Player methods
+        static void PlayerDraw()
+        {
+            card = deck[0];
+            deck.RemoveAt(0);
+
+            if (card == 1)
+            {
+                playerScore += 11;
+                Console.WriteLine("You drew an ace!");
+                playerHand.Add(CardType.Ace);
+                playerAceValues.Add(11);
+            }
+            else if (card == 11)
+            {
+                playerScore += 10;
+                Console.WriteLine("You drew a jack!");
+                playerHand.Add(CardType.Jack);
+            }
+            else if (card == 12)
+            {
+                playerScore += 10;
+                Console.WriteLine("You drew a queen!");
+                playerHand.Add(CardType.Queen);
+            }
+            else if (card == 13)
+            {
+                playerScore += 10;
+                Console.WriteLine("You drew a king!");
+                playerHand.Add(CardType.King);
+            }
+            else
+            {
+                playerScore += card;
+                Console.WriteLine("You drew a " + card + "!");
+
+                switch (card)
+                {
+                    case 2:
+                        playerHand.Add(CardType.Two);
+                        break;
+                    case 3:
+                        playerHand.Add(CardType.Three);
+                        break;
+                    case 4:
+                        playerHand.Add(CardType.Four);
+                        break;
+                    case 5:
+                        playerHand.Add(CardType.Five);
+                        break;
+                    case 6:
+                        playerHand.Add(CardType.Six);
+                        break;
+                    case 7:
+                        playerHand.Add(CardType.Seven);
+                        break;
+                    case 8:
+                        playerHand.Add(CardType.Eight);
+                        break;
+                    case 9:
+                        playerHand.Add(CardType.Nine);
+                        break;
+                    case 10:
+                        playerHand.Add(CardType.Ten);
+                        break;
+                }
+            }
+        }
+        static void ShowPlayerHand()
+        {
+            Console.WriteLine("\nYour hand consists of: ");
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+
+            //Write out the player's cards
+            foreach (CardType _c in playerHand)
+            {
+                Console.WriteLine(_c);
+            }
+
+            Console.WriteLine("");
+            Console.ResetColor();
+        }
+        static void CalculatePlayerAces()
+        {
+            //Checking value of aces. Can improve method most likely
+            if (playerAceValues[0] == 11)
+            {
+                playerAceValues[0] = 1;
+                playerScore -= 10;
+            }
+            else if (playerAceValues.Count >= 2)
+            {
+                if (playerAceValues[1] == 11)
+                {
+                    playerAceValues[1] = 1;
+                    playerScore -= 10;
+                }
+            }
+            else if (playerAceValues.Count >= 3)
+            {
+                if (playerAceValues[2] == 11)
+                {
+                    playerAceValues[2] = 1;
+                    playerScore -= 10;
+                }
+            }
+            else
+            {
+                //End the game if the player goes above 21
+                Console.WriteLine("You went over 21");
+                gameEnded = true;
+            }
+        }
+
+        //Dealer methods
+        static void DealerDraw()
+        {
+            card = deck[0];
+            deck.RemoveAt(0);
+
+            if (card == 1)
+            {
+                dealerScore += 11;
+                Console.WriteLine("The dealer drew an ace!");
+                dealerHand.Add(CardType.Ace);
+                dealerAceValues.Add(11);
+
+            }
+            else if (card == 11)
+            {
+                dealerScore += 10;
+                Console.WriteLine("The dealer drew a jack!");
+                dealerHand.Add(CardType.Jack);
+            }
+            else if (card == 12)
+            {
+                dealerScore += 10;
+                Console.WriteLine("The dealer drew a queen!");
+                dealerHand.Add(CardType.Queen);
+            }
+            else if (card == 13)
+            {
+                dealerScore += 10;
+                Console.WriteLine("The dealer drew a king!");
+                dealerHand.Add(CardType.King);
+            }
+            else
+            {
+                dealerScore += card;
+                Console.WriteLine("The dealer drew a " + card + ".");
+
+                switch (card)
+                {
+                    case 2:
+                        dealerHand.Add(CardType.Two);
+                        break;
+                    case 3:
+                        dealerHand.Add(CardType.Three);
+                        break;
+                    case 4:
+                        dealerHand.Add(CardType.Four);
+                        break;
+                    case 5:
+                        dealerHand.Add(CardType.Five);
+                        break;
+                    case 6:
+                        dealerHand.Add(CardType.Six);
+                        break;
+                    case 7:
+                        dealerHand.Add(CardType.Seven);
+                        break;
+                    case 8:
+                        dealerHand.Add(CardType.Eight);
+                        break;
+                    case 9:
+                        dealerHand.Add(CardType.Nine);
+                        break;
+                    case 10:
+                        dealerHand.Add(CardType.Ten);
+                        break;
+                }
+            }
+        }
+        static void ShowDealerHand()
+        {
+            Console.WriteLine("\nThe dealer's hand consists of: ");
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+
+            //Write out the dealer's cards
+            foreach (CardType _c in dealerHand)
+            {
+                Console.WriteLine(_c);
+            }
+
+            Console.WriteLine("");
+            Console.ResetColor();
+        }
+        static void CalculateDealerAces()
+        {
+            //Check for dealer ace values. Can improve method most likely
+            if (dealerAceValues[0] == 11)
+            {
+                dealerAceValues[0] = 1;
+                dealerScore -= 10;
+            }
+            else if (dealerAceValues.Count >= 2)
+            {
+                if (dealerAceValues[1] == 11)
+                {
+                    dealerAceValues[1] = 1;
+                    dealerScore -= 10;
+                }
+            }
+            else if (dealerAceValues.Count >= 3)
+            {
+                if (dealerAceValues[2] == 11)
+                {
+                    dealerAceValues[2] = 1;
+                    dealerScore -= 10;
+                }
+            }
+            else
+            {
+                Console.WriteLine("The dealer has gone over 21");
+                gameEnded = true;
+            }
+        }
+
+
+        //Randomize list order
+        static List<int> GenerateRandomLoop(List<int> listToShuffle)
+        {
+            for (int i = listToShuffle.Count - 1; i > 0; i--)
+            {
+                var k = rand.Next(i + 1);
+                var value = listToShuffle[k];
+                listToShuffle[k] = listToShuffle[i];
+                listToShuffle[i] = value;
+            }
+            return listToShuffle;
+        }
+    }
+}
