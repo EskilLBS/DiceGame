@@ -4,8 +4,6 @@ namespace DiceGame
 {
     internal class Program
     {
-        #region Variables
-
         //Random number variable
         static readonly Random rand = new();
 
@@ -56,8 +54,6 @@ namespace DiceGame
         static bool blackjack = false;
         static bool playerRestart = false;
 
-        #endregion
-
         static void Main()
         {
             StartGame();
@@ -78,7 +74,7 @@ namespace DiceGame
                 //If player wants to hit
                 if (playerInput.Trim().ToLower() == "hit")
                 {
-                    #region Draw player and dealer card. Check if player goes above 21 before dealer draws card
+                    //Draw player and dealer card. Check if player goes above 21 before dealer draws card
 
                     //Draw player card
                     PlayerDraw();
@@ -112,8 +108,6 @@ namespace DiceGame
 
                     //Check if dealer goes above 21
                     DealerBustCheck();
-
-                    #endregion
 
                     //Stand if dealer is above 17
                     if (dealerHandValue >= 17)
@@ -157,8 +151,7 @@ namespace DiceGame
                     gameEnded = true;
                 }
 
-                #region Logic for ending the game
-
+                //Logic for ending the game
                 if (gameEnded)
                 {
                     //Write out the value of the player and dealer hand
@@ -250,8 +243,6 @@ namespace DiceGame
                         break;
                     }
                 }
-
-                #endregion
             }
         }
 
@@ -264,7 +255,7 @@ namespace DiceGame
                         .SelectMany(s => Enumerable.Range(1, 13)).ToList();
             deck = GenerateRandomLoop(deck);
 
-            #region Bet logic
+            // Bet logic
 
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("How much do you want to bet? You currently have " + playerMoney + " dollars.");
@@ -272,28 +263,31 @@ namespace DiceGame
             betMoneyString = Console.ReadLine();
             bool betIsNumber = int.TryParse(betMoneyString, out betMoney);
 
+            //Ask the player to input a NUMBER and not something else
             if (!betIsNumber)
             {
                 Console.WriteLine("That is not a number. Please write a how much you want to bet as a NUMBER");
                 betMoney = int.Parse(Console.ReadLine());
             }
 
+            //Check if the player commits fraud by betting more money than they have
             if (betMoney > playerMoney)
             {
                 fraud = true;
             }
 
+            //Make sure player isn't betting negative money,
             if (betMoney < 0)
             {
-                betMoney *= -1;
+                Console.WriteLine("You cannot bet a negative amount of money. Please write a POSITIVE number");
+                betMoney = int.Parse(Console.ReadLine());
             }
 
+            //Write how much the player has bet
             Console.WriteLine("You have bet " + betMoney + " dollars!\n");
             Console.ResetColor();
 
-            #endregion
-
-            #region Draw first two cards
+            //Draw first two cards
 
             //Draw player card
             for (int i = 0; i < 2; i++)
@@ -309,10 +303,7 @@ namespace DiceGame
             }
             ShowDealerHand();
 
-            #endregion
-
-            #region Check for Blackjack
-
+            //Check if anyone got Blackjack
             if (playerHandValue == 21 && dealerHandValue != 21)
             {
                 //Player has Blackjack and dealer doesn't
@@ -355,8 +346,6 @@ namespace DiceGame
                 gameEnded = true;
                 blackjack = true;
             }
-
-            #endregion
         }
 
         //Draw a card for the player
