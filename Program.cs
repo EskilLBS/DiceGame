@@ -32,7 +32,7 @@ namespace DiceGame
 
         //Money variables
         static int playerMoney = 1000;
-        static string betMoneyString;
+        static string betMoneyString = "";
         static int betMoney = 0;
         static bool fraud = false;
 
@@ -89,10 +89,12 @@ namespace DiceGame
                     {
                         if (playerHand.Contains(CardType.Ace))
                         {
+                            //Check if any player aces can become 1 instead of 11 to lower the player score
                             CalculatePlayerAces();
 
                             if (playerHandValue > 21)
                             {
+                                //End the game if the player goes above 21
                                 Console.WriteLine("You went over 21");
                                 gameEnded = true;
                             }
@@ -110,16 +112,19 @@ namespace DiceGame
                     {
                         if (dealerHand.Contains(CardType.Ace))
                         {
+                            //Check if any dealer aces can become 1 instead of 11 to lower dealer score
                             CalculateDealerAces();
 
                             if (dealerHandValue > 21)
                             {
+                                //End the game if the dealer goes over 21
                                 Console.WriteLine("The dealer went over 21");
                                 gameEnded = true;
                             }
                         }
                         else
                         {
+                            //End the game if the dealer goes over 21
                             Console.WriteLine("The dealer went over 21");
                             gameEnded = true;
                         }
@@ -152,16 +157,19 @@ namespace DiceGame
                     {
                         if (dealerHand.Contains(CardType.Ace))
                         {
+                            //Check if any aces can become 1 instead of 11 to lower dealer score
                             CalculateDealerAces();
 
                             if (dealerHandValue > 21)
                             {
+                                //End the game if the dealer goes over 21
                                 Console.WriteLine("The dealer went over 21");
                                 gameEnded = true;
                             }
                         }
                         else
                         {
+                            //End the game if the dealer goes over 21
                             Console.WriteLine("The dealer went over 21");
                             gameEnded = true;
                         }
